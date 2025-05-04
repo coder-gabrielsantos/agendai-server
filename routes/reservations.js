@@ -2,10 +2,13 @@ const express = require("express");
 const router = express.Router();
 const reservationController = require("../controllers/reservationController");
 
-// POST /reservations
+// GET: todas as reservas
+router.get("/", reservationController.getAllReservations);
+
+// POST: nova reserva
 router.post("/", reservationController.createReservation);
 
-// GET /reservations
-router.get("/", reservationController.getAllReservations);
+// DELETE: remover reservas antigas (manual ou via cron)
+router.delete("/cleanup", reservationController.deleteOldReservations);
 
 module.exports = router;

@@ -1,12 +1,36 @@
 const db = require("../config/db");
 
-// Create reservation and its timeslots
+function getAllReservations(callback) {
+    const sql = `
+        SELECT r.id,
+               r.professor_name                               AS professorName,
+               r.date,
+               r.datashow,
+               r.speaker,
+               GROUP_CONCAT(rt.timeslot ORDER BY rt.timeslot) AS timeslots
+        FROM reservations r
+                 LEFT JOIN reservation_timeslots rt ON r.id = rt.reservation_id
+        GROUP BY r.id
+        ORDER BY r.date ASC, MIN(rt.timeslot) ASC
+    `;
+
+    db.query(sql, (err, results) => {
+        if (err) return callback(err);
+
+        // Converte os horários em array de números
+        const formatted = results.map((row) => ({
+            ...row,
+            timeslots: row.timeslots ? row.timeslots.split(",").map(Number) : [],
+        }));
+
+        callback(null, formatted);
+    });
+}
+
 function createReservation(data, callback) {
     const {professorName, date, datashow, speaker, timeslots} = data;
 
-    // Gera placeholders para cada timeslot (ex: ?, ?, ?)
     const timeslotPlaceholders = timeslots.map(() => "?").join(", ");
-
     const checkConflicts = `
         SELECT r.id, rt.timeslot
         FROM reservations r
@@ -28,7 +52,6 @@ function createReservation(data, callback) {
             return callback({code: "CONFLICT", details: conflicts}, null);
         }
 
-        // Nenhum conflito, inserir reserva
         const insertReservation = `
             INSERT INTO reservations (professor_name, date, datashow, speaker)
             VALUES (?, ?, ?, ?)
@@ -57,40 +80,19 @@ function createReservation(data, callback) {
     });
 }
 
-// Get all reservations with associated timeslots
-function getAllReservations(callback) {
-    const query = `
-        SELECT r.id,
-               r.professor_name,
-               r.date,
-               r.datashow,
-               r.speaker,
-               GROUP_CONCAT(rt.timeslot ORDER BY rt.timeslot) AS timeslots
+function deleteOldReservations(callback) {
+    const sql = `
+        DELETE
+        r, rt
         FROM reservations r
-                 LEFT JOIN reservation_timeslots rt ON r.id = rt.reservation_id
-        GROUP BY r.id
-        ORDER BY r.date ASC
+        LEFT JOIN reservation_timeslots rt ON r.id = rt.reservation_id
+        WHERE r.date < CURDATE()
     `;
-
-    db.query(query, (err, results) => {
-        if (err) return callback(err);
-
-        const formatted = results.map((row) => ({
-            id: row.id,
-            professorName: row.professor_name,
-            date: row.date,
-            datashow: row.datashow,
-            speaker: row.speaker,
-            timeslots: row.timeslots
-                ? row.timeslots.split(",").map((t) => parseInt(t))
-                : [],
-        }));
-
-        callback(null, formatted);
-    });
+    db.query(sql, callback);
 }
 
 module.exports = {
-    createReservation,
     getAllReservations,
+    createReservation,
+    deleteOldReservations,
 };

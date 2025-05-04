@@ -1,26 +1,32 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-
+const cron = require("node-cron");
 const reservationRoutes = require("./routes/reservations");
+const reservationModel = require("./model/reservationModel");
+
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Routes
 app.use("/reservations", reservationRoutes);
 
-// Root route
-app.get("/", (req, res) => {
-    res.send("Agendaí backend is running 🚀");
+// CRON: Remove reservas antigas diariamente às 00:01
+cron.schedule("1 0 * * *", () => {
+    console.log("[CRON] Limpando reservas antigas...");
+    reservationModel.deleteOldReservations((err, result) => {
+        if (err) {
+            console.error("[CRON] Erro ao excluir reservas antigas:", err);
+        } else {
+            console.log(`[CRON] ${result.affectedRows} reservas antigas removidas.`);
+        }
+    });
 });
 
-// Start server
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Servidor rodando na porta ${PORT}`);
 });

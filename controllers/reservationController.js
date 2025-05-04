@@ -36,7 +36,22 @@ const getAllReservations = (req, res) => {
     });
 };
 
+const deleteOldReservations = (req, res) => {
+    reservationModel.deleteOldReservations((err, result) => {
+        if (err) {
+            console.error("Erro ao excluir reservas antigas:", err);
+            res.status(500).json({ error: "Erro ao excluir reservas antigas" });
+        } else {
+            res.json({
+                message: "Reservas antigas removidas com sucesso",
+                affectedRows: result.affectedRows,
+            });
+        }
+    });
+};
+
 module.exports = {
     createReservation,
     getAllReservations,
+    deleteOldReservations
 };
