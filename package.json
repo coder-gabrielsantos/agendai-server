@@ -1,9 +1,10 @@
 {
   "name": "agendai-server",
   "version": "1.0.0",
-  "main": "api/index.js",
+  "main": "app.js",
   "scripts": {
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "start": "node app.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
