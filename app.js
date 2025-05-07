@@ -7,8 +7,16 @@ require("./config/db");
 
 const app = express();
 
-// Middleware
-app.use(cors());
+const allowedOrigins = [
+    "https://agendai-server.vercel.app" // backend em produção
+];
+
+app.use(cors({
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"]
+}));
+
 app.use(express.json());
 
 // Routes
