@@ -1,57 +1,69 @@
-const reservationModel = require("../model/reservationModel");
+const Reservation = require("../model/reservationModel");
 
-const createReservation = (req, res) => {
-    const { professorName, date, datashow, speaker, timeslots } = req.body;
-
-    if (!professorName || !date || !timeslots || timeslots.length === 0) {
-        return res.status(400).json({ error: "Missing required fields" });
-    }
-
-    const reservationData = {
-        professorName,
-        date,
-        datashow,
-        speaker,
-        timeslots,
-    };
-
-    reservationModel.createReservation(reservationData, (err, result) => {
-        if (err) {
-            console.error("Error creating reservation:", err);
-            return res.status(500).json({ error: "Internal server error" });
-        }
-
-        res.status(201).json({ message: "Reservation created", reservation: result });
-    });
-};
-
-const getAllReservations = (req, res) => {
-    reservationModel.getAllReservations((err, reservations) => {
-        if (err) {
-            console.error("Error fetching reservations:", err);
-            return res.status(500).json({ error: "Internal server error" });
-        }
-
+// GET /reservations - Get all reservations
+exports.getAllReservations = async (req, res) => {
+    try {
+        const reservations = await Reservation.find().sort({ date: 1 });
         res.json(reservations);
-    });
+    } catch (err) {
+        console.error("Error fetching reservations:", err);
+        res.status(500).json({ error: "Failed to fetch reservations" });
+    }
 };
 
-const deleteOldReservations = (req, res) => {
-    reservationModel.deleteOldReservations((err, result) => {
-        if (err) {
-            console.error("Erro ao excluir reservas antigas:", err);
-            res.status(500).json({ error: "Erro ao excluir reservas antigas" });
-        } else {
-            res.json({
-                message: "Reservas antigas removidas com sucesso",
-                affectedRows: result.affectedRows,
+// POST /reservations - Create a new reservation
+exports.createReservation = async (req, res) => {
+    const { professorName, date, timeslots, datashow, speaker } = req.body;
+
+    try {
+        // Check for scheduling conflicts with other reservations
+        const conflictQuery = {
+            date,
+            timeslots: { $in: timeslots },
+            $or: [
+                { datashow: datashow || null },
+                { speaker: speaker || null },
+            ],
+        };
+
+        const conflicts = await Reservation.find(conflictQuery);
+
+        if (conflicts.length > 0) {
+            return res.status(409).json({
+                error: "Resource already reserved for selected timeslot(s)",
+                code: "CONFLICT",
             });
         }
-    });
+
+        // Create and save new reservation
+        const newReservation = new Reservation({
+            professorName,
+            date,
+            timeslots,
+            datashow: datashow || null,
+            speaker: speaker || null,
+        });
+
+        const saved = await newReservation.save();
+        res.status(201).json(saved);
+    } catch (err) {
+        console.error("Error creating reservation:", err);
+        res.status(500).json({ error: "Failed to create reservation" });
+    }
 };
 
-module.exports = {
-    createReservation,
-    getAllReservations,
-    deleteOldReservations
+// DELETE /reservations/cleanup - Delete past reservations
+exports.deleteOldReservations = async (req, res) => {
+    try {
+        const today = new Date().toISOString().split("T")[0]; // e.g. "2025-05-07"
+        const result = await Reservation.deleteMany({ date: { $lt: today } });
+
+        res.json({
+            message: "Old reservations removed successfully",
+            deletedCount: result.deletedCount,
+        });
+    } catch (err) {
+        console.error("Error deleting old reservations:", err);
+        res.status(500).json({ error: "Failed to delete old reservations" });
+    }
 };

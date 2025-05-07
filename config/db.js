@@ -1,22 +1,14 @@
-const mysql = require("mysql2");
+const mongoose = require("mongoose");
 require("dotenv").config();
 
-const db = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT,
+mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
 });
 
-db.getConnection((err, connection) => {
-    if (err) {
-        console.error("Error connecting to the database: ", err);
+const db = mongoose.connection;
 
-    } else {
-        console.log("Connection to the database established...");
-        connection.release();
-    }
-});
+db.on("error", console.error.bind(console, "MongoDB connection error:"));
+db.once("open", () => console.log("MongoDB connected successfully"));
 
 module.exports = db;
