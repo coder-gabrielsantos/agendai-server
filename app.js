@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv");
 const reservationRoutes = require("./routes/reservations");
 require("dotenv").config();
 require("./config/db");
@@ -12,7 +11,7 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-    origin: allowedOrigins,
+    origin: "*",
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"]
 }));
