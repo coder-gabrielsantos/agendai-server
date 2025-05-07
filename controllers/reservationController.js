@@ -1,9 +1,11 @@
 const Reservation = require("../model/reservationModel");
 
-// GET /reservations - Get all reservations
+// GET /reservations - Get only today's and future reservations
 exports.getAllReservations = async (req, res) => {
     try {
-        const reservations = await Reservation.find().sort({ date: 1 });
+        const today = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
+        const reservations = await Reservation.find({ date: { $gte: today } }).sort({ date: 1 });
+
         res.json(reservations);
     } catch (err) {
         console.error("Error fetching reservations:", err);
