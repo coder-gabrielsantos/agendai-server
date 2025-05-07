@@ -18,15 +18,24 @@ exports.createReservation = async (req, res) => {
     const { professorName, date, timeslots, datashow, speaker } = req.body;
 
     try {
-        // Check for scheduling conflicts with other reservations
+        // Build conflict query
         const conflictQuery = {
             date,
             timeslots: { $in: timeslots },
-            $or: [
-                { datashow: datashow || null },
-                { speaker: speaker || null },
-            ],
         };
+
+        const orConditions = [];
+
+        if (datashow) {
+            orConditions.push({ datashow });
+        }
+        if (speaker) {
+            orConditions.push({ speaker });
+        }
+
+        if (orConditions.length > 0) {
+            conflictQuery.$or = orConditions;
+        }
 
         const conflicts = await Reservation.find(conflictQuery);
 
