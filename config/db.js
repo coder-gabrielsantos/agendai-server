@@ -1,14 +1,21 @@
 const mongoose = require("mongoose");
 require("dotenv").config();
 
-mongoose.connect(process.env.MONGODB_URI, {
+const uri = process.env.MONGODB_URI;
+
+if (!uri) {
+    console.error("❌ MONGODB_URI is undefined!");
+    process.exit(1);
+}
+
+mongoose.connect(uri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 });
 
 const db = mongoose.connection;
 
-db.on("error", console.error.bind(console, "MongoDB connection error:"));
-db.once("open", () => console.log("MongoDB connected successfully"));
+db.on("error", err => console.error("❌ MongoDB connection error:", err));
+db.once("open", () => console.log("✅ MongoDB connected"));
 
 module.exports = db;
