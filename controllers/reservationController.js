@@ -63,6 +63,62 @@ exports.createReservation = async (req, res) => {
     }
 };
 
+// POST /reservations/available - Get only available resources
+exports.getAvailableResources = async (req, res) => {
+    const { date, timeslots } = req.body;
+
+    if (!date || !timeslots || timeslots.length === 0) {
+        return res.status(400).json({ error: "Missing date or timeslots" });
+    }
+
+    try {
+        // Fetch all reservations that conflict with the selected timeslots
+        const reservations = await Reservation.find({
+            date,
+            timeslots: { $in: timeslots },
+        });
+
+        const usedDatashows = new Set();
+        const usedSpeakers  = new Set();
+
+        for (const r of reservations) {
+            if (r.datashow && typeof r.datashow === "string") {
+                usedDatashows.add(r.datashow);
+            }
+            if (r.speaker && typeof r.speaker === "string") {
+                usedSpeakers.add(r.speaker);
+            }
+        }
+
+        const allDatashows = [
+            "Datashow 1",
+            "Datashow 2",
+            "Datashow 3",
+            "Datashow 4",
+            "Datashow 5",
+            "Datashow 6",
+        ];
+
+        const allSpeakers = [
+            "Caixa de som 1",
+            "Caixa de som 2",
+            "Caixa de som 3",
+            "Caixa de som 4",
+        ];
+
+        const availableDatashows = allDatashows.filter((d) => !usedDatashows.has(d));
+        const availableSpeakers = allSpeakers.filter((s) => !usedSpeakers.has(s));
+
+        res.json({
+            datashows: availableDatashows,
+            speakers: availableSpeakers,
+        });
+    } catch (err) {
+        console.error("Error fetching available resources:", err);
+        res.status(500).json({ error: "Failed to fetch available resources" });
+    }
+};
+
 // DELETE /reservations/cleanup - Delete past reservations
 exports.deleteOldReservations = async (req, res) => {
     try {

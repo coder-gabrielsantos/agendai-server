@@ -8,6 +8,9 @@ router.get("/", reservationController.getAllReservations);
 // POST: nova reserva
 router.post("/", reservationController.createReservation);
 
+// POST: somente resursos disponíveis
+router.post("/available", reservationController.getAvailableResources);
+
 // DELETE: remover reservas antigas (manual ou via cron)
 router.delete("/cleanup", reservationController.deleteOldReservations);
 
