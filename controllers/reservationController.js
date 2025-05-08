@@ -4,7 +4,9 @@ const Reservation = require("../model/reservationModel");
 exports.getAllReservations = async (req, res) => {
     try {
         const today = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
-        const reservations = await Reservation.find({ date: { $gte: today } }).sort({ date: 1 });
+        const reservations = await Reservation.find({
+            date: { $gte: today }
+        }).sort({ date: -1 });
 
         res.json(reservations);
     } catch (err) {
