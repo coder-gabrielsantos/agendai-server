@@ -3,7 +3,12 @@ const Reservation = require("../model/reservationModel");
 // GET /reservations - Get only today's and future reservations
 exports.getAllReservations = async (req, res) => {
     try {
-        const today = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
+        const today = new Date(
+            new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })
+        )
+            .toISOString()
+            .split("T")[0];
+
         const reservations = await Reservation.find({
             date: { $gte: today }
         }).sort({ date: -1 });
@@ -124,7 +129,12 @@ exports.getAvailableResources = async (req, res) => {
 // DELETE /reservations/cleanup - Delete past reservations
 exports.deleteOldReservations = async (req, res) => {
     try {
-        const today = new Date().toISOString().split("T")[0]; // e.g. "2025-05-07"
+        const today = new Date(
+            new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })
+        )
+            .toISOString()
+            .split("T")[0];
+
         const result = await Reservation.deleteMany({ date: { $lt: today } });
 
         res.json({
