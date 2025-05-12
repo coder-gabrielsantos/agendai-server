@@ -110,7 +110,6 @@ exports.getAvailableResources = async (req, res) => {
             "Caixa de som 1",
             "Caixa de som 2",
             "Caixa de som 3",
-            "Caixa de som 4",
         ];
 
         const availableDatashows = allDatashows.filter((d) => !usedDatashows.has(d));
