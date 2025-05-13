@@ -3,14 +3,22 @@ const Reservation = require("../model/reservationModel");
 // GET /reservations - Get only today's and future reservations
 exports.getAllReservations = async (req, res) => {
     try {
-        const today = new Date(
+        const brazilTimeNow = new Date(
             new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })
-        )
-            .toISOString()
-            .split("T")[0];
+        );
 
+        // Calculate cutoff (2 days before now)
+        const cutoffDate = new Date(brazilTimeNow);
+        cutoffDate.setDate(cutoffDate.getDate() - 2);
+        const formattedCutoff = cutoffDate.toISOString().split("T")[0];
+
+        await Reservation.deleteMany({ date: { $lt: formattedCutoff } });
+
+        const today = brazilTimeNow.toISOString().split("T")[0];
+
+        // Get today's and future reservations
         const reservations = await Reservation.find({
-            date: { $gte: today }
+            date: { $gte: today },
         }).sort({ date: -1 });
 
         res.json(reservations);
