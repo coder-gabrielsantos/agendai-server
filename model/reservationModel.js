@@ -18,6 +18,10 @@ const ReservationSchema = new mongoose.Schema({
         type: String,
         default: null,
     },
+    space: {
+        type: String,
+        default: null,
+    },
     timeslots: [
         {
             type: Number, // 1 to 9
