@@ -108,6 +108,24 @@ exports.getAvailableResources = async (req, res) => {
     }
 };
 
+// DELETE /reservations/:id - Delete a reservation by ID
+exports.deleteReservation = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const deleted = await Reservation.findByIdAndDelete(id);
+
+        if (!deleted) {
+            return res.status(404).json({ error: "Reservation not found" });
+        }
+
+        res.json({ message: "Reservation deleted successfully" });
+    } catch (err) {
+        console.error("Error deleting reservation:", err);
+        res.status(500).json({ error: "Failed to delete reservation" });
+    }
+};
+
 // DELETE /reservations/cleanup - Delete past reservations
 exports.deleteOldReservations = async (req, res) => {
     try {
